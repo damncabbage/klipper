@@ -2,7 +2,10 @@
 # This script installs Klipper on an debian
 #
 
-PYTHONDIR="${HOME}/klippy-env"
+# Find SRCDIR from the pathname of this script
+SRCDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd )"
+KLIPPERHOMEDIR="${SRCDIR}/.."
+PYTHONDIR="${KLIPPERHOMEDIR}/env"
 SYSTEMDDIR="/etc/systemd/system"
 KLIPPER_USER=$USER
 KLIPPER_GROUP=$KLIPPER_USER
@@ -11,7 +14,7 @@ KLIPPER_GROUP=$KLIPPER_USER
 install_packages()
 {
     # Packages for python cffi
-    PKGLIST="virtualenv python3-dev libffi-dev build-essential"
+    PKGLIST="pythin3-venv python3-dev libffi-dev build-essential"
     # kconfig requirements
     PKGLIST="${PKGLIST} libncurses-dev"
     # hub-ctrl
@@ -37,10 +40,10 @@ create_virtualenv()
     report_status "Updating python virtual environment..."
 
     # Create virtualenv if it doesn't already exist
-    [ ! -d ${PYTHONDIR} ] && virtualenv -p python3 ${PYTHONDIR}
+    [ ! -d "${PYTHONDIR}" ] && python -m venv "${PYTHONDIR}"
 
     # Install/update dependencies
-    ${PYTHONDIR}/bin/pip install -r ${SRCDIR}/scripts/klippy-requirements.txt
+    "${PYTHONDIR}/bin/pip" install -r "${SRCDIR}/scripts/klippy-requirements.txt"
 }
 
 # Step 3: Install startup script
@@ -62,7 +65,7 @@ WantedBy=multi-user.target
 Type=simple
 User=$KLIPPER_USER
 RemainAfterExit=yes
-ExecStart=${PYTHONDIR}/bin/python ${SRCDIR}/klippy/klippy.py ${HOME}/printer.cfg -l ${KLIPPER_LOG}
+ExecStart="${PYTHONDIR}/bin/python" "${SRCDIR}/klippy/klippy.py" "${KLIPPERHOMEDIR}/printer.cfg" -l "${KLIPPER_LOG}"
 Restart=always
 RestartSec=10
 EOF
@@ -93,9 +96,6 @@ verify_ready()
 
 # Force script to exit if an error occurs
 set -e
-
-# Find SRCDIR from the pathname of this script
-SRCDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd )"
 
 # Run installation steps defined above
 verify_ready
